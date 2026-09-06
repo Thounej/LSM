@@ -14,8 +14,8 @@ it gives you — that's your new `CF_KV_NAMESPACE_ID`.
 ## 2. Cloudflare Worker — new Worker
 
 Dashboard → **Workers & Pages** → **Create** → **Worker**.
-Name it `lsmmedals` (this becomes part of the URL:
-`lsmmedals.<your-subdomain>.workers.dev`).
+Name it `lsm` (this becomes part of the URL:
+`lsm.<your-subdomain>.workers.dev`).
 
 Paste in `worker.js`. Then:
 - **Settings → Bindings → Add binding → KV Namespace**
@@ -25,11 +25,11 @@ Paste in `worker.js`. Then:
   - `TM_SERVICE_LOGIN` = same value as the ICM one
   - `TM_SERVICE_PASSWORD` = same value as the ICM one
 
-Deploy. Your Worker URL will be `https://lsmmedals.<your-subdomain>.workers.dev`
+Deploy. Your Worker URL will be `https://lsm.<your-subdomain>.workers.dev`
 — it'll be the same subdomain your `illancupmedals` Worker uses, since that
 subdomain belongs to the Cloudflare account, not the individual Worker.
 
-If your Worker ends up with a different name than `lsmmedals`, update the
+If your Worker ends up with a different name than `lsm`, update the
 `WORKER_URL` constant near the bottom of `index.html` before publishing.
 
 ## 3. Nadeo service account
@@ -37,10 +37,10 @@ If your Worker ends up with a different name than `lsmmedals`, update the
 No new setup needed — `service_ICMEDALS2` is just a login, reused as-is in
 `.env` (for local seeding) and as the two Worker secrets above.
 
-## 4. Run seed.js locally (do this before anything goes live)
+## 4. Run seed.js locally
 
 ```
-cd lsm-static
+cd LSM
 cp .env.example .env
 # fill in .env: same TM_SERVICE_LOGIN/PASSWORD, CLUB_ID=97497, FOLDER_ID=866418,
 # your Cloudflare account id + API token, and the new CF_KV_NAMESPACE_ID from step 1
@@ -49,19 +49,17 @@ node seed.js
 ```
 
 Watch the console output — it logs every activity found in the folder
-(name + type). Since I can't reach Nadeo's API from this sandbox to test it
-myself, this is the part most likely to need a small tweak on the first run.
-If it errors or finds 0 maps, paste me the console output and I'll fix the
-activity-parsing logic in `seed.js`.
+(name + type), so any parsing gap in `getFolderMaps()` shows up there.
+A healthy run currently finds ~515 maps.
 
 Once it finishes successfully, check the KV namespace in the dashboard —
 you should see `maps`, `leaderboard`, and `lastUpdated` keys.
 
 ## 5. GitHub repo + Pages
 
-Create a new repo (e.g. `LSM`), push everything in this folder including
-`.env` (same practice as ICMEDALS — keep the repo private if `.env` is in
-it, or add `.env` to `.gitignore` and set the six secrets below instead).
+Create a new repo (e.g. `LSM`) and push everything in this folder. `.env` is
+listed in `.gitignore` — keep it out of the repo and set the seven Actions
+secrets below instead, so the credentials never land in git history.
 
 - **Settings → Secrets and variables → Actions**, add:
   `TM_SERVICE_LOGIN`, `TM_SERVICE_PASSWORD`, `CLUB_ID`, `FOLDER_ID`,

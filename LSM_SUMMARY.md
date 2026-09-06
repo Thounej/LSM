@@ -20,7 +20,7 @@ see its own PROJECT_SUMMARY.md.
 - Reuses the same Nadeo service account as Illan Cup Medals (`TM_SERVICE_LOGIN` /
   `TM_SERVICE_PASSWORD`) — it's just a login, not tied to one club.
 - Reuses the same Cloudflare account, but a brand-new KV namespace + Worker
-  (`lsmmedals`) so the ICM site is untouched.
+  (`lsm`) so the ICM site is untouched.
 
 ## Key difference from Illan Cup Medals
 Illan Cup pulled every campaign in a club. LSM instead pulls only the
@@ -30,35 +30,41 @@ Folder contents can be campaigns, rooms, or plain map-upload "buckets" —
 seed.js handles all three, logging each activity's type as it goes so any
 parsing gaps are easy to spot from the console output.
 
-## Status as of last session
-Code was written but **not yet run against the real folder** (the build
-sandbox has no network access to Nadeo/Ubisoft). First real run of `seed.js`
-locally is the next step — if it errors or comes back with 0 maps, share the
-console output (it logs every activity name + type it finds) so the parsing
-in `getFolderMaps()` can be adjusted.
+## Status (verified 2026-09-07)
+**Live and seeded.** The Worker at `https://lsm.kurrankuuselatony98.workers.dev`
+responds on all endpoints, and KV holds a full dataset:
+
+- 515 maps tracked, by 42 distinct authors
+- 499 maps with at least one AT holder, 16 still unclaimed
+- 3,262 author medals total; 100 leaderboard entries, all display names resolved
+- last seed run: 2026-09-06 16:39 UTC
+
+So `getFolderMaps()` parses the folder correctly — the earlier "not yet run,
+may need a parsing tweak" note is obsolete.
 
 ## File structure
 ```
-lsm-static/
+LSM/
 ├── .github/workflows/seed.yml   # nightly seed run
 ├── index.html                   # frontend (LSM/Latitude branding)
 ├── worker.js                    # Cloudflare Worker
 ├── seed.js                      # leaderboard generator (folder-based)
 ├── package.json
 ├── .env.example
+├── .gitignore
 ├── .nojekyll
 ├── DEPLOY.md                    # step-by-step Cloudflare/GitHub setup
 └── assets/                      # Latitude logo mark + lockup PNGs
 ```
 
 ## Known issues / things to remember
-- `WORKER_URL` is hardcoded near the bottom of `index.html` — update it if
-  the deployed Worker's name/subdomain differs from
-  `lsmmedals.kurrankuuselatony98.workers.dev`.
-- Player-lookup panel currently only shows matching player names/IDs from
-  `/api/search` — per-map AT ownership for a selected player (like Illan
-  Cup's "scan all maps for their ATs") isn't wired up yet, noted inline in
-  the UI as a next step.
+- `WORKER_URL` is hardcoded near the bottom of `index.html`. It currently
+  points at `lsm.kurrankuuselatony98.workers.dev`, which is confirmed live —
+  only change it if the Worker is ever renamed.
+- There is no player-lookup panel in the UI at all. The Worker exposes
+  `/api/search`, `/api/resolvename` and `/api/top100`, but `index.html`
+  never calls them — Illan Cup's "scan all maps for a player's ATs"
+  feature is unbuilt on both the frontend and the wiring.
 - After any seed.js change: delete the `maps` key from the `LSM` KV
   namespace, then re-run seed locally.
 - GitHub Actions needs all 7 secrets set in the new repo's

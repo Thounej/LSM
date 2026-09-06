@@ -140,7 +140,7 @@ async function getFolderMaps(token) {
 }
 
 // ---------------------------------------------------------------------------
-// STEP 2: map metadata (name, author, times) from the Core API
+// STEP 2: map metadata (name, author, times) from the Live API
 // ---------------------------------------------------------------------------
 
 async function getMapInfos(mapUids, token) {

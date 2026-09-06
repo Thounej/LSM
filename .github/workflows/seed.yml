@@ -2,7 +2,7 @@ name: Seed Leaderboard
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 1:00 AM Finland time (UTC+3)
+    - cron: '0 22 * * *'  # 01:00 Finland during EEST (UTC+3); 00:00 during EET (winter)
   workflow_dispatch:        # lets you also run it manually from the Actions tab
 
 jobs:

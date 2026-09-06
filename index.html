@@ -140,30 +140,7 @@
 
   /* ---------- main ---------- */
   main{flex:1;min-width:0;padding:0 0 96px;}
-  .hero{padding:76px 56px 60px;border-bottom:1px solid var(--line);}
-  .hero-grid{display:flex;align-items:flex-start;gap:52px;flex-wrap:wrap;}
-  .hero-n{
-    font-size:clamp(110px,13vw,192px);font-weight:600;letter-spacing:-0.055em;
-    line-height:.76;color:var(--red);flex-shrink:0;font-variant-numeric:tabular-nums;
-  }
-  .hero-copy{display:flex;flex-direction:column;gap:22px;padding-top:10px;min-width:260px;}
-  .hero-copy h1{
-    font-size:clamp(26px,3vw,38px);line-height:1.14;max-width:540px;text-wrap:pretty;
-  }
-  .hero-copy p{
-    margin:0;color:var(--muted);font-size:15.5px;line-height:1.65;
-    max-width:460px;text-wrap:pretty;
-  }
-  .hero-live{
-    display:flex;align-items:center;gap:9px;
-    font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--muted-dim);
-  }
-  .hero-live .dot{
-    width:6px;height:6px;border-radius:50%;background:var(--cyan);flex-shrink:0;
-  }
-
-  section.tab-panel{display:none;padding:52px 56px 0;}
+  section.tab-panel{display:none;padding:64px 56px 0;}
   section.tab-panel.active{display:block;}
   .panel-head{
     display:flex;align-items:flex-end;justify-content:space-between;
@@ -296,6 +273,145 @@
   .map-name .copy:focus-visible .uid-hint{opacity:1;}
   .map-name .copy.copied .uid-hint{opacity:0;}
 
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+
+  /* ---------- timer ---------- */
+  .tmr-wrap{position:relative;width:100%;max-width:400px;aspect-ratio:1;}
+  .tmr-wrap svg{width:100%;height:100%;display:block;transform:rotate(-90deg);}
+  .tmr-track{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:14;}
+  .tmr-ring{
+    fill:none;stroke:var(--red);stroke-width:14;stroke-linecap:round;
+    transition:stroke-dashoffset .2s linear;
+  }
+  .tmr-wrap.done .tmr-ring{stroke:var(--cyan);}
+  .tmr-read{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Geist Mono',monospace;font-size:64px;font-weight:600;
+    letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:var(--white);
+  }
+  .tmr-wrap.done .tmr-read{color:var(--cyan);}
+  .tmr-controls{
+    display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+    width:100%;max-width:400px;
+  }
+  .tmr-btn{
+    flex:1;min-width:104px;background:transparent;border:1px solid var(--line);
+    color:var(--muted);font-family:'Geist Mono',monospace;font-size:11.5px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;padding:15px 0;border-radius:100px;
+    cursor:pointer;transition:.15s;
+  }
+  .tmr-btn:hover:not(:disabled){color:var(--white);border-color:var(--line-strong);background:var(--surface-2);}
+  .tmr-btn.primary{background:var(--red);border-color:var(--red);color:var(--white);}
+  .tmr-btn.primary:hover:not(:disabled){background:transparent;color:var(--red);}
+  .tmr-btn:disabled{opacity:.3;cursor:not-allowed;}
+  .tmr-btn:focus-visible{outline:2px solid var(--red);outline-offset:3px;}
+  .tmr-presets{display:flex;flex-direction:column;}
+  .tmr-preset{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;
+    background:transparent;border:0;border-bottom:1px solid var(--line);
+    padding:20px 18px;cursor:pointer;transition:.15s;text-align:left;
+    font-family:'Geist',sans-serif;font-size:20px;font-weight:600;
+    letter-spacing:-0.03em;color:var(--muted);
+  }
+  .tmr-preset:last-child{border-bottom:none;}
+  .tmr-preset:hover{background:var(--surface-2);color:var(--white);}
+  .tmr-preset.active{color:var(--red);}
+  .tmr-preset span{
+    font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted-dim);
+  }
+  .tmr-preset.active span{color:var(--red);}
+  .tmr-preset:focus-visible{outline:2px solid var(--red);outline-offset:-2px;}
+  @media(max-width:1080px){ .tmr-read{font-size:52px;} }
+
+  /* ---------- wheel ---------- */
+  .wheel-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:start;}
+  .wheel-stage{
+    border:1px solid var(--line);border-radius:12px;background:var(--surface);
+    padding:30px;display:flex;flex-direction:column;align-items:center;gap:22px;
+  }
+  .wheel-wrap{position:relative;width:100%;max-width:400px;aspect-ratio:1;}
+  .wheel-pointer{
+    position:absolute;top:-3px;left:50%;transform:translateX(-50%);
+    width:0;height:0;z-index:2;
+    border-left:11px solid transparent;border-right:11px solid transparent;
+    border-top:21px solid var(--red);
+  }
+  #wheelSvg{width:100%;height:100%;display:block;}
+  #wheelRotor{transition:transform 5.2s cubic-bezier(.13,.73,.08,1);transform-origin:200px 200px;}
+  .wheel-empty{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:var(--muted-dim);font-size:15px;line-height:1.6;padding:0 44px;
+    border:1px dashed var(--line);border-radius:50%;
+  }
+  .wheel-empty[hidden]{display:none;}
+
+  .spin-btn{
+    width:100%;max-width:400px;background:var(--red);border:1px solid var(--red);
+    color:var(--white);font-family:'Geist Mono',monospace;font-size:12.5px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;padding:16px 0;border-radius:100px;
+    cursor:pointer;transition:.15s;
+  }
+  .spin-btn:hover:not(:disabled){background:transparent;color:var(--red);}
+  .spin-btn:disabled{opacity:.35;cursor:not-allowed;}
+  .spin-btn:focus-visible{outline:2px solid var(--white);outline-offset:3px;}
+
+  .wheel-result{
+    width:100%;max-width:400px;border:1px solid var(--red-line);border-radius:12px;
+    background:var(--red-soft);padding:20px;display:flex;flex-direction:column;gap:10px;
+    align-items:center;text-align:center;
+  }
+  .wheel-result[hidden]{display:none;}
+  .wr-label{
+    font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--red);
+  }
+  .wr-name{font-size:29px;font-weight:600;letter-spacing:-0.03em;line-height:1.22;word-break:break-word;}
+  .wr-drop{
+    background:transparent;border:1px solid var(--red-line);color:var(--red);
+    font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.16em;
+    text-transform:uppercase;padding:8px 14px;border-radius:100px;cursor:pointer;
+    transition:.15s;margin-top:4px;
+  }
+  .wr-drop:hover{background:var(--red);color:var(--white);border-color:var(--red);}
+  .wr-drop:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+
+  /* options */
+  .wheel-picker{
+    border:1px solid var(--line);border-radius:12px;background:var(--surface);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .wp-head{
+    padding:16px 18px;border-bottom:1px solid var(--line);
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  }
+  .wp-count,.wp-hint{
+    font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted-dim);
+  }
+  .wp-count{color:var(--red);}
+  .wp-input{
+    width:100%;min-height:330px;resize:vertical;border:0;outline:none;
+    background:transparent;color:var(--white);padding:16px 18px;
+    font-family:'Geist Mono',monospace;font-size:15px;line-height:1.9;
+  }
+  .wp-input::placeholder{color:var(--muted-dim);}
+  .wp-input:focus{background:rgba(255,255,255,.02);}
+  .wp-foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;}
+  .wp-btn{
+    font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);background:transparent;border:1px solid var(--line);
+    padding:9px 14px;border-radius:100px;cursor:pointer;transition:.15s;
+  }
+  .wp-btn:hover{color:var(--white);border-color:var(--line-strong);background:var(--surface-2);}
+  .wp-btn:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+
+  @media(prefers-reduced-motion:reduce){ #wheelRotor{transition-duration:.01s;} }
+  @media(max-width:1080px){ .wheel-layout{grid-template-columns:1fr;} .wp-input{min-height:200px;} }
+
   /* ---------- copy toast ---------- */
   #toast{
     position:fixed;left:50%;bottom:28px;transform:translate(-50%,14px);
@@ -345,9 +461,13 @@
     .ro-l{text-align:left;}
     .rail-foot{display:none;}
     main{padding-bottom:72px;}
-    .hero{padding:48px 22px 40px;}
     section.tab-panel{padding:36px 22px 0;}
     .panel-head{flex-direction:column;align-items:flex-start;}
+  }
+  @media(max-width:560px){
+    /* four tabs no longer fit beside the logo - give them their own row */
+    .rail nav{margin-left:0;width:100%;justify-content:space-between;gap:2px;}
+    .rail nav a{padding:8px 10px;}
   }
   @media(max-width:620px){
     thead th:nth-child(3),tbody td:nth-child(3){display:none;}
@@ -367,11 +487,14 @@
     <nav>
       <a href="#" data-tab="leaderboard" class="active">Leaderboard</a>
       <a href="#" data-tab="maps">Maps</a>
+      <a href="#" data-tab="wheel">Wheel</a>
+      <a href="#" data-tab="timer">Timer</a>
     </nav>
 
     <div class="readout">
       <div class="ro"><span class="ro-n" id="statMaps">&mdash;</span><span class="ro-l">Maps<br>tracked</span></div>
       <div class="ro"><span class="ro-n" id="statAts">&mdash;</span><span class="ro-l">Medals<br>claimed</span></div>
+      <div class="ro"><span class="ro-n" id="statUnclaimed">&mdash;</span><span class="ro-l">Still<br>unclaimed</span></div>
       <div class="ro"><span class="ro-n" id="statUpdated">&mdash;</span><span class="ro-l">Last<br>synced</span></div>
     </div>
 
@@ -385,21 +508,9 @@
   </aside>
 
   <main>
-    <section class="hero">
-      <div class="tag">// 001 &mdash; Still standing</div>
-      <div class="hero-grid">
-        <div class="hero-n" id="statUnclaimed">&mdash;</div>
-        <div class="hero-copy">
-          <h1>author times in this folder that nobody has beaten.</h1>
-          <p>LSM rescans every map in the Latitude speedmapping folder each night and works out who is still chasing the author time.</p>
-          <div class="hero-live"><span class="dot"></span> Club 97497 // Folder 866418</div>
-        </div>
-      </div>
-    </section>
-
     <section id="tab-leaderboard" class="tab-panel active">
       <div class="panel-head">
-        <h2><span class="tag">// 002 &mdash; Standings</span>Leaderboard</h2>
+        <h2><span class="tag">// 001 &mdash; Standings</span>Leaderboard</h2>
         <div class="meta">Top 100 by author medals held</div>
       </div>
       <div class="lb-layout">
@@ -416,7 +527,7 @@
 
     <section id="tab-maps" class="tab-panel">
       <div class="panel-head">
-        <h2><span class="tag">// 003 &mdash; The folder</span>Maps</h2>
+        <h2><span class="tag">// 002 &mdash; The folder</span>Maps</h2>
         <div class="meta" id="mapsMeta">loading&hellip;</div>
       </div>
 
@@ -444,6 +555,72 @@
               <tr><td colspan="4" class="empty">Loading maps&hellip;</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-wheel" class="tab-panel">
+      <div class="panel-head">
+        <h2><span class="tag">// 003 &mdash; Pick one for me</span>Wheel</h2>
+        <div class="meta" id="wheelMeta">nothing on the wheel yet</div>
+      </div>
+
+      <div class="wheel-layout">
+        <div class="wheel-stage">
+          <div class="wheel-wrap">
+            <div class="wheel-pointer"></div>
+            <svg id="wheelSvg" viewBox="0 0 400 400" aria-hidden="true"><g id="wheelRotor"></g></svg>
+            <div class="wheel-empty" id="wheelEmpty">Type a couple of options<br>and they&#39;ll land on the wheel.</div>
+          </div>
+          <button class="spin-btn" id="spinBtn" type="button" disabled>Spin</button>
+          <div class="wheel-result" id="wheelResult" hidden></div>
+        </div>
+
+        <div class="wheel-picker">
+          <div class="wp-head">
+            <span class="wp-count" id="wheelCount">0 on the wheel</span>
+            <span class="wp-hint">One per line</span>
+          </div>
+          <label class="sr-only" for="wheelInput">Wheel options, one per line</label>
+          <textarea id="wheelInput" class="wp-input" spellcheck="false" placeholder="Type or paste your options here&#10;&#10;one per line&#10;like this&#10;and this"></textarea>
+          <div class="wp-foot">
+            <button class="wp-btn" id="wheelClear" type="button">Clear all</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-timer" class="tab-panel">
+      <div class="panel-head">
+        <h2><span class="tag">// 004 &mdash; On the clock</span>Timer</h2>
+        <div class="meta" id="timerMeta">60 minute session</div>
+      </div>
+
+      <div class="wheel-layout">
+        <div class="wheel-stage">
+          <div class="tmr-wrap" id="timerWrap">
+            <svg viewBox="0 0 400 400" aria-hidden="true">
+              <circle class="tmr-track" cx="200" cy="200" r="180"></circle>
+              <circle class="tmr-ring" id="timerRing" cx="200" cy="200" r="180"></circle>
+            </svg>
+            <div class="tmr-read" id="timerRead" role="timer" aria-live="off">60:00</div>
+          </div>
+          <div class="tmr-controls">
+            <button class="tmr-btn primary" id="timerStartBtn" type="button">Start</button>
+            <button class="tmr-btn" id="timerStopBtn" type="button" disabled>Stop</button>
+            <button class="tmr-btn" id="timerResetBtn" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="wheel-picker">
+          <div class="wp-head">
+            <span class="wp-count" id="timerState">Ready</span>
+            <span class="wp-hint">Session length</span>
+          </div>
+          <div class="tmr-presets">
+            <button class="tmr-preset" data-min="30" type="button">30 min<span>Short</span></button>
+            <button class="tmr-preset active" data-min="60" type="button">60 min<span>Standard</span></button>
+          </div>
         </div>
       </div>
     </section>
@@ -589,6 +766,202 @@ function renderTopMappers(){
   btn.setAttribute('aria-expanded', String(topMappersExpanded));
 }
 
+// ---- wheel -------------------------------------------------------------
+// A general-purpose spinner: the options are whatever is typed into the box,
+// one per line. Nothing here is tied to the map data.
+// Beyond this many slices the labels stop fitting, so the wheel draws bare
+// segments and the winner is named in the result card instead.
+const WHEEL_LABEL_MAX = 22;
+let wheelOptions = [];
+let wheelAngle = 0;
+let wheelSpinning = false;
+
+function saveWheelOptions(){
+  try{ localStorage.setItem('lsm.wheel', document.getElementById('wheelInput').value); }catch{}
+}
+function loadWheelOptions(){
+  try{
+    const raw = localStorage.getItem('lsm.wheel');
+    if(raw) document.getElementById('wheelInput').value = raw;
+  }catch{}
+}
+
+// duplicate lines are kept on purpose — repeating a name is how you weight it
+function readWheelInput(){
+  wheelOptions = document.getElementById('wheelInput').value
+    .split('\n').map(s=>s.trim()).filter(Boolean);
+  saveWheelOptions();
+  const n = wheelOptions.length;
+  document.getElementById('wheelCount').textContent = `${n} on the wheel`;
+  document.getElementById('wheelMeta').textContent =
+    n ? `${n} option${n===1?'':'s'} on the wheel` : 'nothing on the wheel yet';
+  renderWheel();
+}
+
+function renderWheel(){
+  const rotor = document.getElementById('wheelRotor');
+  const empty = document.getElementById('wheelEmpty');
+  const btn = document.getElementById('spinBtn');
+
+  btn.disabled = wheelOptions.length < 2 || wheelSpinning;
+  empty.hidden = wheelOptions.length > 0;
+  if(wheelOptions.length === 0){ rotor.innerHTML = ''; return; }
+
+  const n = wheelOptions.length, seg = 360/n, cx = 200, cy = 200, r = 190;
+  const pt = (deg, rad)=>{
+    const a = (deg - 90) * Math.PI/180;
+    return [(cx + rad*Math.cos(a)).toFixed(2), (cy + rad*Math.sin(a)).toFixed(2)];
+  };
+
+  let out = '';
+  for(let i=0;i<n;i++){
+    const fill = i%2 ? 'rgba(255,255,255,0.07)' : '#e03333';
+    if(n === 1){
+      out += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"></circle>`;
+    } else {
+      const [x1,y1] = pt(i*seg, r), [x2,y2] = pt((i+1)*seg, r);
+      out += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${seg>180?1:0} 1 ${x2} ${y2} Z" fill="${fill}" stroke="#1a1a1a" stroke-width="1"></path>`;
+    }
+    if(n <= WHEEL_LABEL_MAX){
+      const mid = i*seg + seg/2;
+      const [tx,ty] = pt(mid, r*0.62);
+      // flip labels past 6 o'clock so none of them read upside down
+      const rot = mid > 180 ? mid + 90 : mid - 90;
+      const full = wheelOptions[i];
+      const short = full.length > 18 ? full.slice(0,17) + '…' : full;
+      out += `<text x="${tx}" y="${ty}" fill="#ffffff" font-size="${n>14?11:14}" font-family="Geist Mono, monospace" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot.toFixed(2)} ${tx} ${ty})">${escapeHtml(short)}</text>`;
+    }
+  }
+  rotor.innerHTML = out;
+}
+
+function showWheelResult(text){
+  const el = document.getElementById('wheelResult');
+  el.innerHTML =
+    `<div class="wr-label">You got</div>` +
+    `<div class="wr-name">${escapeHtml(text)}</div>` +
+    `<button class="wr-drop" type="button">Remove from wheel</button>`;
+  el.hidden = false;
+}
+
+function spinWheel(){
+  if(wheelOptions.length < 2 || wheelSpinning) return;
+
+  wheelSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('wheelResult').hidden = true;
+
+  const n = wheelOptions.length, seg = 360/n;
+  const winner = Math.floor(Math.random()*n);
+  // land the winner under the pointer, offset a little inside its own slice
+  // so the wheel doesn't always stop dead centre
+  const jitter = (Math.random()-0.5) * seg * 0.6;
+  const targetMod = (((360 - (winner*seg + seg/2 + jitter)) % 360) + 360) % 360;
+  const currentMod = ((wheelAngle % 360) + 360) % 360;
+  let delta = targetMod - currentMod;
+  if(delta < 0) delta += 360;
+  wheelAngle += 360*6 + delta;
+
+  const rotor = document.getElementById('wheelRotor');
+  rotor.style.transform = `rotate(${wheelAngle}deg)`;
+
+  const won = wheelOptions[winner];
+  const done = ()=>{
+    rotor.removeEventListener('transitionend', done);
+    wheelSpinning = false;
+    showWheelResult(won);
+    renderWheel();
+  };
+  rotor.addEventListener('transitionend', done);
+}
+
+// drawing without replacement: drop the winner and respin from what's left
+function removeWheelOption(text){
+  const box = document.getElementById('wheelInput');
+  const lines = box.value.split('\n');
+  const i = lines.findIndex(l=>l.trim() === text);
+  if(i > -1) lines.splice(i,1);
+  box.value = lines.join('\n');
+  document.getElementById('wheelResult').hidden = true;
+  readWheelInput();
+}
+
+// ---- timer -------------------------------------------------------------
+// Counts down against a wall-clock deadline rather than by decrementing a
+// counter, so it stays accurate if the tab is backgrounded and throttled.
+const TIMER_RING_C = 2 * Math.PI * 180;
+let timerDuration = 60*60*1000;
+let timerRemaining = timerDuration;
+let timerEndAt = null;   // non-null only while running
+let timerTick = null;
+
+function fmtClock(ms){
+  const t = Math.max(0, Math.ceil(ms/1000));
+  return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+}
+
+function timerRender(){
+  const rem = timerEndAt ? Math.max(0, timerEndAt - Date.now()) : timerRemaining;
+  document.getElementById('timerRead').textContent = fmtClock(rem);
+
+  const ring = document.getElementById('timerRing');
+  ring.style.strokeDasharray = TIMER_RING_C;
+  ring.style.strokeDashoffset = TIMER_RING_C * (1 - (timerDuration ? rem/timerDuration : 0));
+
+  document.getElementById('timerStartBtn').disabled = !!timerEndAt;
+  document.getElementById('timerStopBtn').disabled = !timerEndAt;
+
+  const done = document.getElementById('timerWrap').classList.contains('done');
+  document.getElementById('timerState').textContent =
+    done ? "Time's up" : timerEndAt ? 'Running' : (rem === timerDuration ? 'Ready' : 'Paused');
+}
+
+function timerStart(){
+  if(timerEndAt) return;
+  if(timerRemaining <= 0){                       // restart after it has finished
+    timerRemaining = timerDuration;
+    document.getElementById('timerWrap').classList.remove('done');
+  }
+  timerEndAt = Date.now() + timerRemaining;
+  clearInterval(timerTick);
+  timerTick = setInterval(()=>{
+    if(Date.now() >= timerEndAt) timerFinish(); else timerRender();
+  }, 200);
+  timerRender();
+}
+
+function timerStop(){
+  if(!timerEndAt) return;
+  timerRemaining = Math.max(0, timerEndAt - Date.now());
+  timerEndAt = null;
+  clearInterval(timerTick); timerTick = null;
+  timerRender();
+}
+
+function timerFinish(){
+  clearInterval(timerTick); timerTick = null;
+  timerEndAt = null;
+  timerRemaining = 0;
+  document.getElementById('timerWrap').classList.add('done');
+  timerRender();
+}
+
+function timerReset(){
+  clearInterval(timerTick); timerTick = null;
+  timerEndAt = null;
+  timerRemaining = timerDuration;
+  document.getElementById('timerWrap').classList.remove('done');
+  timerRender();
+}
+
+function timerSetMinutes(min){
+  timerDuration = min*60*1000;
+  document.getElementById('timerMeta').textContent = `${min} minute session`;
+  document.querySelectorAll('.tmr-preset').forEach(b=>
+    b.classList.toggle('active', Number(b.dataset.min) === min));
+  timerReset();
+}
+
 // ---- clipboard ---------------------------------------------------------
 async function copyText(text){
   try{
@@ -696,6 +1069,28 @@ document.querySelectorAll('thead th[data-sort]').forEach(th=>{
   });
 });
 
+document.getElementById('wheelInput').addEventListener('input', readWheelInput);
+document.getElementById('wheelClear').addEventListener('click', ()=>{
+  document.getElementById('wheelInput').value = '';
+  document.getElementById('wheelResult').hidden = true;
+  readWheelInput();
+});
+document.getElementById('spinBtn').addEventListener('click', spinWheel);
+document.getElementById('wheelResult').addEventListener('click', (e)=>{
+  if(!e.target.closest('.wr-drop')) return;
+  removeWheelOption(document.querySelector('#wheelResult .wr-name').textContent);
+});
+
+document.getElementById('timerStartBtn').addEventListener('click', timerStart);
+document.getElementById('timerStopBtn').addEventListener('click', timerStop);
+document.getElementById('timerResetBtn').addEventListener('click', timerReset);
+document.querySelectorAll('.tmr-preset').forEach(b=>{
+  b.addEventListener('click', ()=>timerSetMinutes(Number(b.dataset.min)));
+});
+
+loadWheelOptions();
+readWheelInput();
+timerRender();
 loadData();
 </script>
 </body>

@@ -39,6 +39,11 @@ export default {
         return json(data ? JSON.parse(data) : []);
       }
 
+      if (url.pathname === '/api/wrleaderboard') {
+        const data = await env.LSM.get('wrLeaderboard');
+        return json(data ? JSON.parse(data) : []);
+      }
+
       if (url.pathname === '/api/status') {
         const lastUpdated = await env.LSM.get('lastUpdated');
         return json({ lastUpdated });

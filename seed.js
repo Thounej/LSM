@@ -171,11 +171,14 @@ async function resolveDisplayName(accountId) {
 }
 
 // ---------------------------------------------------------------------------
-// STEP 4: AT holders per map (top 100, early-stop once score > authorTime)
+// STEP 4: AT holders + the world record per map
+// The world leaderboard comes back sorted best-first, so the very first entry
+// IS the world record - no extra request needed for it.
 // ---------------------------------------------------------------------------
 
-async function getAtHolders(mapUid, groupUid, authorTime, token) {
+async function getMapTop(mapUid, groupUid, authorTime, token) {
   const holders = [];
+  let wr = null;
   let offset = 0;
   while (true) {
     const data = await liveGet(
@@ -184,6 +187,8 @@ async function getAtHolders(mapUid, groupUid, authorTime, token) {
     );
     const top = data.tops?.[0]?.top || [];
     if (top.length === 0) break;
+
+    if (offset === 0 && top[0]) wr = { accountId: top[0].accountId, score: top[0].score };
 
     let hitNonAt = false;
     for (const entry of top) {
@@ -197,7 +202,7 @@ async function getAtHolders(mapUid, groupUid, authorTime, token) {
     if (hitNonAt || top.length < 100) break;
     offset += 100;
   }
-  return holders;
+  return { holders, wr };
 }
 
 // ---------------------------------------------------------------------------
@@ -252,6 +257,7 @@ async function main() {
   console.log('Resolving author display names + scanning leaderboards for AT holders...');
   const authorNameCache = new Map();
   const atCountByPlayer = new Map(); // accountId -> { count, name }
+  const wrCountByPlayer = new Map(); // accountId -> { count, name }
   const maps = [];
 
   for (const info of mapInfos) {
@@ -268,8 +274,9 @@ async function main() {
     }
 
     let atHolders = [];
+    let wr = null;
     try {
-      atHolders = await getAtHolders(mapUid, groupUid, authorScore, token);
+      ({ holders: atHolders, wr } = await getMapTop(mapUid, groupUid, authorScore, token));
     } catch (e) {
       console.warn(`  leaderboard scan failed for ${name} (${mapUid}): ${e.message}`);
     }
@@ -278,6 +285,12 @@ async function main() {
       const entry = atCountByPlayer.get(accountId) || { count: 0, name: null };
       entry.count += 1;
       atCountByPlayer.set(accountId, entry);
+    }
+
+    if (wr) {
+      const entry = wrCountByPlayer.get(wr.accountId) || { count: 0, name: null };
+      entry.count += 1;
+      wrCountByPlayer.set(wr.accountId, entry);
     }
 
     maps.push({
@@ -290,38 +303,55 @@ async function main() {
       silverScore,
       bronzeScore,
       thumbnailUrl,
-      atCount: atHolders.length
+      atCount: atHolders.length,
+      wrHolder: wr ? wr.accountId : null,
+      wrScore: wr ? wr.score : null
     });
 
     console.log(`  ${name}: ${atHolders.length} AT holder(s)`);
   }
 
-  console.log('Resolving top 100 leaderboard player names...');
-  const leaderboard = [...atCountByPlayer.entries()]
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, 100);
-
-  for (const [accountId, entry] of leaderboard) {
-    let name = authorNameCache.get(accountId);
-    if (name === undefined) {
-      name = await resolveDisplayName(accountId);
-      await sleep(1600);
+  // shared so a player appearing in both boards is only looked up once
+  async function resolveNames(entries) {
+    for (const [accountId, entry] of entries) {
+      let name = authorNameCache.get(accountId);
+      if (name === undefined) {
+        name = await resolveDisplayName(accountId);
+        authorNameCache.set(accountId, name);
+        await sleep(1600);
+      }
+      entry.name = stripTmFormatting(name) || accountId;
     }
-    entry.name = stripTmFormatting(name) || accountId;
   }
+
+  const topBy = (m) => [...m.entries()].sort((a, b) => b[1].count - a[1].count).slice(0, 100);
+
+  console.log('Resolving top 100 author-medal names...');
+  const leaderboard = topBy(atCountByPlayer);
+  await resolveNames(leaderboard);
+
+  console.log('Resolving top 100 world-record names...');
+  const wrLeaderboard = topBy(wrCountByPlayer);
+  await resolveNames(wrLeaderboard);
 
   const leaderboardOut = leaderboard.map(([accountId, entry]) => ({
     accountId,
     name: entry.name,
     atCount: entry.count
   }));
+  const wrLeaderboardOut = wrLeaderboard.map(([accountId, entry]) => ({
+    accountId,
+    name: entry.name,
+    wrCount: entry.count
+  }));
 
   console.log('Writing to Cloudflare KV...');
   await kvPut('maps', JSON.stringify(maps));
   await kvPut('leaderboard', JSON.stringify(leaderboardOut));
+  await kvPut('wrLeaderboard', JSON.stringify(wrLeaderboardOut));
   await kvPut('lastUpdated', new Date().toISOString());
 
-  console.log(`Done. ${maps.length} maps, ${leaderboardOut.length} leaderboard entries.`);
+  console.log(`Done. ${maps.length} maps, ${leaderboardOut.length} medal entries, ${wrLeaderboardOut.length} WR entries.`);
 }
 
 main().catch((err) => {

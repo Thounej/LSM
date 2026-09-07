@@ -69,7 +69,7 @@
 
   /* 07/BRAND ELEMENTS — mono furniture: 10–12px, uppercase, wide-tracked */
   .tag,.meta,.rail-coord,.ro-l,.widget-head,thead th,.chip,.badge,
-  .rail-note,.flinks a,.show-more,.lb-count,.tm-count,.uid-hint{
+  .rail-note,.flinks a,.show-more,.lb-count,.tm-count{
     font-family:'Geist Mono',monospace;
   }
   .tag{
@@ -196,6 +196,44 @@
   }
   .lb-row:nth-child(-n+3) .lb-count{color:var(--red);}
 
+  /* leaderboard mode switch */
+  .lb-modes{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .lb-mode{
+    font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);background:transparent;
+    border:1px solid var(--line);padding:9px 16px;border-radius:100px;
+    cursor:pointer;transition:.15s;
+  }
+  .lb-mode:hover{color:var(--white);border-color:var(--line-strong);}
+  .lb-mode.active{background:var(--red);color:var(--white);border-color:var(--red);}
+  .lb-mode:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+
+  /* map name links out, the uid copies */
+  .map-name .map-link{
+    color:inherit;text-decoration:none;font-weight:500;
+    border-bottom:1px solid transparent;transition:.15s;
+  }
+  .map-name .map-link:hover{color:var(--red);border-bottom-color:var(--red-line);}
+  .map-name .map-link:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:3px;}
+  .map-name .row{display:flex;align-items:center;gap:10px;min-width:0;}
+  .copy-uid{
+    flex-shrink:0;background:transparent;border:1px solid var(--line);
+    color:var(--muted-dim);width:26px;height:26px;border-radius:7px;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:.15s;opacity:0;padding:0;
+  }
+  tbody tr:hover .copy-uid,.copy-uid:focus-visible{opacity:1;}
+  .copy-uid:hover{color:var(--red);border-color:var(--red-line);background:var(--red-soft);}
+  .copy-uid.copied{color:var(--cyan);border-color:var(--cyan);opacity:1;}
+  .copy-uid:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+  .copy-uid svg{width:13px;height:13px;}
+  @media(hover:none){
+    /* no hover to reveal it on touch, and 26px is a poor thumb target -
+       widen the hit area to ~44px without disturbing the row layout */
+    .copy-uid{opacity:1;position:relative;}
+    .copy-uid::after{content:'';position:absolute;inset:-9px;}
+  }
+
   /* ---------- most maps built ---------- */
   .widget{
     border:1px solid var(--line);border-radius:12px;background:var(--surface);
@@ -255,23 +293,6 @@
   .badge.medal{background:var(--red-soft);color:var(--red);border:1px solid var(--red-line);}
   .badge.none{background:transparent;color:var(--muted-dim);border:1px solid var(--line);}
   .badge .n{color:var(--white);font-weight:600;}
-
-  /* ---------- click-to-copy map name ---------- */
-  .map-name .copy{
-    background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;
-    text-align:left;cursor:pointer;display:inline-flex;align-items:baseline;gap:10px;
-    transition:color .15s;
-  }
-  .map-name .copy:hover{color:var(--red);}
-  .map-name .copy:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:3px;}
-  .map-name .copy.copied{color:var(--cyan);}
-  .map-name .uid-hint{
-    font-size:9.5px;font-weight:400;color:var(--muted-dim);letter-spacing:.14em;
-    text-transform:uppercase;opacity:0;transition:opacity .15s;
-  }
-  .map-name .copy:hover .uid-hint,
-  .map-name .copy:focus-visible .uid-hint{opacity:1;}
-  .map-name .copy.copied .uid-hint{opacity:0;}
 
   .sr-only{
     position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -412,6 +433,88 @@
   @media(prefers-reduced-motion:reduce){ #wheelRotor{transition-duration:.01s;} }
   @media(max-width:1080px){ .wheel-layout{grid-template-columns:1fr;} .wp-input{min-height:200px;} }
 
+  /* ---------- latitudle ---------- */
+  .ldl-wrap{max-width:860px;display:flex;flex-direction:column;gap:20px;}
+  .ldl-intro{color:var(--muted);font-size:15px;line-height:1.65;max-width:620px;text-wrap:pretty;}
+  .ldl-form{display:flex;gap:10px;flex-wrap:wrap;}
+  .ldl-form input{
+    flex:1;min-width:240px;background:var(--surface);border:1px solid var(--line);
+    color:var(--white);padding:14px 18px;border-radius:100px;font-size:15px;font-family:'Geist';
+  }
+  .ldl-form input:focus{outline:none;border-color:var(--red);background:transparent;}
+  .ldl-form input::placeholder{color:var(--muted-dim);}
+  .ldl-form input:disabled{opacity:.45;cursor:not-allowed;}
+  .ldl-go{
+    background:var(--red);border:1px solid var(--red);color:var(--white);
+    font-family:'Geist Mono',monospace;font-size:11.5px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;padding:0 30px;border-radius:100px;
+    cursor:pointer;transition:.15s;
+  }
+  .ldl-go:hover:not(:disabled){background:transparent;color:var(--red);}
+  .ldl-go:disabled{opacity:.35;cursor:not-allowed;}
+  .ldl-go:focus-visible{outline:2px solid var(--white);outline-offset:3px;}
+  .ldl-msg{
+    font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--red);min-height:14px;
+  }
+
+  .ldl-board{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;}
+  .ldl-board[hidden]{display:none;}
+  .ldl-row{
+    display:grid;grid-template-columns:minmax(0,1fr) 96px minmax(0,150px) 104px;
+    gap:1px;background:var(--line);border-bottom:1px solid var(--line);
+  }
+  .ldl-row:last-child{border-bottom:none;}
+  .ldl-row.head{background:transparent;border-bottom:1px solid var(--line);}
+  .ldl-row.head > div{
+    background:transparent;font-family:'Geist Mono',monospace;font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted-dim);padding:13px 16px;
+  }
+  .ldl-cell{
+    background:var(--bg);padding:15px 16px;font-size:13.5px;display:flex;
+    align-items:center;gap:8px;min-width:0;
+  }
+  .ldl-cell.name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ldl-cell.num{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums;}
+  .ldl-cell.who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
+  /* cyan = exact, red = close, plain = no */
+  .ldl-cell.ok{background:var(--cyan-soft);color:var(--cyan);}
+  .ldl-cell.near{background:var(--red-soft);color:var(--red);}
+  .ldl-cell.no{color:var(--muted);}
+  .ldl-arrow{font-family:'Geist Mono',monospace;font-size:12px;opacity:.85;margin-left:auto;}
+  @keyframes ldlIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .ldl-row.reveal{animation:ldlIn .2s ease both;}
+
+  .ldl-result{
+    border:1px solid var(--cyan);border-radius:12px;background:var(--cyan-soft);
+    padding:20px;display:flex;flex-direction:column;gap:8px;
+  }
+  .ldl-result[hidden]{display:none;}
+  .ldl-result .lr-label{
+    font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--cyan);
+  }
+  .ldl-result .lr-name{font-size:24px;font-weight:600;letter-spacing:-0.03em;}
+  .ldl-result .lr-meta{
+    font-family:'Geist Mono',monospace;font-size:12px;color:var(--muted);
+    display:flex;gap:18px;flex-wrap:wrap;
+  }
+
+  @media(prefers-reduced-motion:reduce){ .ldl-row.reveal{animation:none;} }
+  @media(max-width:760px){
+    /* stack instead of dropping a column - all three clues have to stay visible */
+    .ldl-row.head{display:none;}
+    .ldl-row{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .ldl-cell.name{grid-column:1/-1;}
+    .ldl-cell{flex-direction:column;align-items:flex-start;gap:5px;padding:12px;font-size:12.5px;}
+    .ldl-cell[data-k]::before{
+      content:attr(data-k);font-family:'Geist Mono',monospace;font-size:9px;
+      letter-spacing:.16em;text-transform:uppercase;opacity:.55;
+    }
+    .ldl-arrow{margin-left:0;}
+    .ldl-go{padding:14px 24px;width:100%;}
+  }
+
   /* ---------- copy toast ---------- */
   #toast{
     position:fixed;left:50%;bottom:28px;transform:translate(-50%,14px);
@@ -464,10 +567,11 @@
     section.tab-panel{padding:36px 22px 0;}
     .panel-head{flex-direction:column;align-items:flex-start;}
   }
-  @media(max-width:560px){
-    /* four tabs no longer fit beside the logo - give them their own row */
-    .rail nav{margin-left:0;width:100%;justify-content:space-between;gap:2px;}
-    .rail nav a{padding:8px 10px;}
+  @media(max-width:660px){
+    /* five tabs no longer fit beside the logo - give them their own row,
+       and let them wrap rather than clipping the last one off-screen */
+    .rail nav{margin-left:0;width:100%;flex-wrap:wrap;justify-content:flex-start;gap:2px;}
+    .rail nav a{padding:8px 9px;font-size:12px;}
   }
   @media(max-width:620px){
     thead th:nth-child(3),tbody td:nth-child(3){display:none;}
@@ -489,6 +593,7 @@
       <a href="#" data-tab="maps">Maps</a>
       <a href="#" data-tab="wheel">Wheel</a>
       <a href="#" data-tab="timer">Timer</a>
+      <a href="#" data-tab="latitudle">Latitudle</a>
     </nav>
 
     <div class="readout">
@@ -512,6 +617,10 @@
       <div class="panel-head">
         <h2><span class="tag">// 001 &mdash; Standings</span>Leaderboard</h2>
         <div class="meta">Top 100 by author medals held</div>
+      </div>
+      <div class="lb-modes" role="tablist">
+        <button class="lb-mode active" type="button" data-lbmode="at" role="tab" aria-selected="true">Author medals</button>
+        <button class="lb-mode" type="button" data-lbmode="wr" role="tab" aria-selected="false">World records</button>
       </div>
       <div class="lb-layout">
         <div class="panel" id="leaderboardBody">
@@ -624,6 +733,27 @@
         </div>
       </div>
     </section>
+
+    <section id="tab-latitudle" class="tab-panel">
+      <div class="panel-head">
+        <h2><span class="tag">// 005 &mdash; Daily</span>Latitudle</h2>
+        <div class="meta" id="ldlMeta">loading&hellip;</div>
+      </div>
+
+      <div class="ldl-wrap">
+        <p class="ldl-intro">One map from the Latitude&deg; mappers, picked fresh each day. Type a map name and hit enter &mdash; each guess tells you whether the year, the mapper and the award count are higher, lower or a match.</p>
+
+        <form class="ldl-form" id="ldlForm" autocomplete="off">
+          <input id="ldlInput" list="ldlNames" placeholder="Type a map name&hellip;" aria-label="Your guess" disabled>
+          <datalist id="ldlNames"></datalist>
+          <button class="ldl-go" id="ldlGo" type="submit" disabled>Guess</button>
+        </form>
+        <div class="ldl-msg" id="ldlMsg" role="status" aria-live="polite"></div>
+
+        <div class="ldl-board" id="ldlBoard" hidden></div>
+        <div class="ldl-result" id="ldlResult" hidden></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -641,6 +771,8 @@ let currentFilter = 'all';
 let sortKey = 'name';
 let sortDir = 1;
 let topMappersExpanded = false;
+let wrLeaderboard = [];
+let lbMode = 'at';           // 'at' = author medals, 'wr' = world records
 
 // "Most maps built" widget shows 5 by default, 15 once expanded.
 const TM_COLLAPSED = 5;
@@ -648,13 +780,17 @@ const TM_EXPANDED = 15;
 
 async function loadData(){
   try{
-    const [mapsRes, lbRes, statusRes] = await Promise.all([
+    const [mapsRes, lbRes, wrRes, statusRes] = await Promise.all([
       fetch(`${WORKER_URL}/api/maps`).then(r=>r.json()),
       fetch(`${WORKER_URL}/api/leaderboard`).then(r=>r.json()),
+      // added later than the rest, so an older Worker or an un-reseeded KV
+      // simply yields an empty board rather than breaking the page
+      fetch(`${WORKER_URL}/api/wrleaderboard`).then(r=>r.json()).catch(()=>[]),
       fetch(`${WORKER_URL}/api/status`).then(r=>r.json()).catch(()=>({}))
     ]);
     allMaps = mapsRes || [];
     leaderboard = lbRes || [];
+    wrLeaderboard = Array.isArray(wrRes) ? wrRes : [];
 
     document.getElementById('statMaps').textContent = allMaps.length;
     document.getElementById('statAts').textContent = allMaps.reduce((s,m)=>s+(m.atCount||0),0);
@@ -704,9 +840,12 @@ function renderMaps(){
   document.getElementById('mapsBody').innerHTML = rows.map(m=>`
     <tr>
       <td class="map-name">
-        <button class="copy" type="button" data-uid="${escapeHtml(m.mapUid)}" title="Click to copy this map's UID">
-          <span>${escapeHtml(stripTmFormatting(m.name))}</span><span class="uid-hint">copy uid</span>
-        </button>
+        <div class="row">
+          <a class="map-link" href="https://trackmania.io/#/leaderboard/${encodeURIComponent(m.mapUid)}" target="_blank" rel="noopener" title="Open on trackmania.io">${escapeHtml(stripTmFormatting(m.name))}</a>
+          <button class="copy-uid" type="button" data-uid="${escapeHtml(m.mapUid)}" title="Copy map UID" aria-label="Copy map UID">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.6"></rect><path d="M10.5 3.5v-.6a1.4 1.4 0 0 0-1.4-1.4H3.4A1.4 1.4 0 0 0 2 2.9v5.7a1.4 1.4 0 0 0 1.4 1.4h.6"></path></svg>
+          </button>
+        </div>
       </td>
       <td class="map-author">${escapeHtml(stripTmFormatting(m.authorName))}</td>
       <td class="mono-cell">${formatTime(m.authorScore)}</td>
@@ -721,17 +860,26 @@ function renderMaps(){
 
 function renderLeaderboard(){
   const el = document.getElementById('leaderboardBody');
-  if(leaderboard.length===0){
-    el.innerHTML = `<div class="empty">No leaderboard data yet.</div>`;
+  const wr = lbMode === 'wr';
+  const rows = wr ? wrLeaderboard : leaderboard;
+  const val = p => (wr ? p.wrCount : p.atCount) || 0;
+
+  document.querySelector('#tab-leaderboard .panel-head .meta').textContent =
+    wr ? 'Top 100 by world records held' : 'Top 100 by author medals held';
+
+  if(rows.length===0){
+    el.innerHTML = wr
+      ? `<div class="empty">No world-record data yet &mdash; it appears after the next nightly sync.</div>`
+      : `<div class="empty">No leaderboard data yet.</div>`;
     return;
   }
   // widest bar = the top holder, so the fill reads as share of the leader
-  const maxAts = Math.max(...leaderboard.map(p=>p.atCount||0), 1);
-  el.innerHTML = leaderboard.map((p,i)=>`
-    <div class="lb-row" style="--pct:${((p.atCount||0)/maxAts*100).toFixed(1)}%">
+  const max = Math.max(...rows.map(val), 1);
+  el.innerHTML = rows.map((p,i)=>`
+    <div class="lb-row" style="--pct:${(val(p)/max*100).toFixed(1)}%">
       <div class="lb-rank">${String(i+1).padStart(2,'0')}</div>
       <div class="lb-name">${escapeHtml(stripTmFormatting(p.name))}</div>
-      <div class="lb-count">${p.atCount} AT${p.atCount===1?'':'s'}</div>
+      <div class="lb-count">${val(p)} ${wr ? (val(p)===1?'WR':'WRs') : (val(p)===1?'AT':'ATs')}</div>
     </div>
   `).join('');
 }
@@ -886,6 +1034,188 @@ function removeWheelOption(text){
   readWheelInput();
 }
 
+// ---- latitudle ---------------------------------------------------------
+// A daily map-guessing game over the Latitude° mappers' most-awarded maps.
+// The pool ships as a static JSON file, loaded the first time the tab opens.
+let ldlPool = null;
+let ldlAnswer = null;
+let ldlGuesses = [];      // map ids, in the order they were guessed
+let ldlWon = false;
+let ldlLoading = false;
+
+// Everyone gets the same map on the same UTC day. Hashing the date string
+// keeps consecutive days from landing on neighbouring entries.
+function ldlDayKey(d = new Date()){
+  return d.getUTCFullYear() + '-' +
+         String(d.getUTCMonth()+1).padStart(2,'0') + '-' +
+         String(d.getUTCDate()).padStart(2,'0');
+}
+function ldlHash(str){
+  let h = 1779033703 ^ str.length;
+  for(let i=0;i<str.length;i++){
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+function ldlSave(){
+  try{
+    localStorage.setItem('lsm.latitudle', JSON.stringify({
+      day: ldlDayKey(), guesses: ldlGuesses, won: ldlWon
+    }));
+  }catch{}
+}
+function ldlLoad(){
+  try{
+    const raw = localStorage.getItem('lsm.latitudle');
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(s && s.day === ldlDayKey()){        // a new day wipes the board
+      ldlGuesses = Array.isArray(s.guesses) ? s.guesses : [];
+      ldlWon = !!s.won;
+    }
+  }catch{}
+}
+
+async function ldlInit(){
+  if(ldlPool || ldlLoading) return;
+  ldlLoading = true;
+  const msg = document.getElementById('ldlMsg');
+  try{
+    const res = await fetch('latitudle-maps.json');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    ldlPool = await res.json();
+  }catch(e){
+    msg.textContent = "Couldn't load the map list";
+    ldlLoading = false;
+    return;
+  }
+  ldlLoading = false;
+
+  const day = ldlDayKey();
+  ldlAnswer = ldlPool[ldlHash(day) % ldlPool.length];
+  ldlLoad();
+
+  document.getElementById('ldlMeta').textContent = `${day} · ${ldlPool.length} maps in play`;
+  document.getElementById('ldlInput').disabled = false;
+  document.getElementById('ldlGo').disabled = false;
+  ldlRender();
+}
+
+// The datalist used to hold every map, so clicking the box dropped a
+// 446-item list over the page. Suggestions now start from the first letter
+// typed but never exceed a handful, so an empty box shows nothing.
+const LDL_MIN_CHARS = 1;   // a name STARTING with this much is offered
+const LDL_MID_CHARS = 3;   // a match buried mid-name needs this much to count
+const LDL_MAX_SUGGESTIONS = 8;
+
+function ldlSuggest(){
+  const list = document.getElementById('ldlNames');
+  const q = document.getElementById('ldlInput').value.trim().toLowerCase();
+  if(!ldlPool || q.length < LDL_MIN_CHARS){ list.innerHTML = ''; return; }
+
+  // Names that BEGIN with the query come first and are offered from one
+  // letter. A match buried mid-name only counts once there are enough
+  // consecutive letters to be deliberate - otherwise a single letter drags
+  // in half the pool. This is what makes maps behind an event prefix
+  // ("SNRGY - PERHAPS", "3 - LSM - ...") findable by their real name.
+  const starts = [], inside = [];
+  for(const m of ldlPool){
+    const n = m.n.toLowerCase();
+    if(n.startsWith(q)) starts.push(m);
+    else if(q.length >= LDL_MID_CHARS && n.includes(q)) inside.push(m);
+    if(starts.length >= LDL_MAX_SUGGESTIONS) break;
+  }
+  list.innerHTML = [...starts, ...inside]
+    .slice(0, LDL_MAX_SUGGESTIONS)
+    .map(m=>`<option value="${escapeHtml(m.n)}"></option>`)
+    .join('');
+}
+
+function ldlCompare(guess){
+  const sameAuthors = (a,b)=>{
+    const A=new Set(a.map(x=>x.toLowerCase())), B=new Set(b.map(x=>x.toLowerCase()));
+    const shared=[...A].filter(x=>B.has(x));
+    if(shared.length===0) return 'no';
+    return (A.size===B.size && shared.length===A.size) ? 'ok' : 'near';
+  };
+  const num=(g,a,nearWithin)=>{
+    if(g===a) return {state:'ok', arrow:''};
+    return { state: Math.abs(g-a) <= nearWithin ? 'near' : 'no', arrow: a>g ? '↑' : '↓' };
+  };
+  return {
+    year: num(guess.y, ldlAnswer.y, 1),
+    awards: num(guess.a, ldlAnswer.a, 10),
+    who: sameAuthors(guess.au, ldlAnswer.au),
+  };
+}
+
+function ldlRender(){
+  const board = document.getElementById('ldlBoard');
+  if(ldlGuesses.length === 0){ board.hidden = true; board.innerHTML=''; return; }
+  board.hidden = false;
+
+  const rows = ['<div class="ldl-row head"><div>Map</div><div>Year</div><div>Mapper</div><div>Awards</div></div>'];
+  // newest guess on top, so the latest clue is the one you read first
+  for(const id of [...ldlGuesses].reverse()){
+    const g = ldlPool.find(m=>m.id===id);
+    if(!g) continue;
+    const c = ldlCompare(g);
+    rows.push(
+      '<div class="ldl-row">' +
+      `<div class="ldl-cell name" data-k="Map" title="${escapeHtml(g.n)}">${escapeHtml(g.n)}</div>` +
+      `<div class="ldl-cell num ${c.year.state}" data-k="Year">${g.y}<span class="ldl-arrow">${c.year.arrow}</span></div>` +
+      `<div class="ldl-cell who ${c.who}" data-k="Mapper" title="${escapeHtml(g.au.join(', '))}">${escapeHtml(g.au.join(', '))}</div>` +
+      `<div class="ldl-cell num ${c.awards.state}" data-k="Awards">${g.a}<span class="ldl-arrow">${c.awards.arrow}</span></div>` +
+      '</div>'
+    );
+  }
+  board.innerHTML = rows.join('');
+
+  const result = document.getElementById('ldlResult');
+  if(ldlWon){
+    const n = ldlGuesses.length;
+    result.innerHTML =
+      `<div class="lr-label">Got it in ${n} guess${n===1?'':'es'}</div>` +
+      `<div class="lr-name">${escapeHtml(ldlAnswer.n)}</div>` +
+      `<div class="lr-meta"><span>${escapeHtml(ldlAnswer.au.join(', '))}</span><span>${ldlAnswer.y}</span><span>${ldlAnswer.a} awards</span></div>` +
+      `<div class="lr-meta"><span>Next map at 00:00 UTC</span></div>`;
+    result.hidden = false;
+    document.getElementById('ldlInput').disabled = true;
+    document.getElementById('ldlGo').disabled = true;
+  } else {
+    result.hidden = true;
+  }
+}
+
+function ldlGuess(text){
+  const msg = document.getElementById('ldlMsg');
+  msg.textContent = '';
+  if(!ldlPool || ldlWon) return;
+
+  const q = String(text||'').trim().toLowerCase();
+  if(!q) return;
+  const found = ldlPool.find(m=>m.n.toLowerCase() === q)
+             || ldlPool.filter(m=>m.n.toLowerCase().includes(q));
+  const guess = Array.isArray(found) ? (found.length === 1 ? found[0] : null) : found;
+
+  if(!guess){
+    msg.textContent = Array.isArray(found) && found.length > 1
+      ? `${found.length} maps match that — be more specific`
+      : 'No map by that name in the pool';
+    return;
+  }
+  if(ldlGuesses.includes(guess.id)){ msg.textContent = 'Already guessed'; return; }
+
+  ldlGuesses.push(guess.id);
+  if(guess.id === ldlAnswer.id) ldlWon = true;
+  ldlSave();
+  ldlRender();
+  document.getElementById('ldlInput').value = '';
+  document.getElementById('ldlNames').innerHTML = '';
+}
+
 // ---- timer -------------------------------------------------------------
 // Counts down against a wall-clock deadline rather than by decrementing a
 // counter, so it stays accurate if the tab is backgrounded and throttled.
@@ -1028,6 +1358,7 @@ document.querySelectorAll('nav a[data-tab]').forEach(link=>{
     link.classList.add('active');
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     document.getElementById(`tab-${tab}`).classList.add('active');
+    if(tab === 'latitudle') ldlInit();
     const panel = document.getElementById(`tab-${tab}`);
     const y = window.scrollY + panel.getBoundingClientRect().top - 24;
     window.scrollTo({top: Math.max(0, y), behavior:'smooth'});
@@ -1048,7 +1379,7 @@ document.getElementById('topMappersToggle').addEventListener('click', ()=>{
 });
 // delegated so the 500+ map rows don't each need their own listener
 document.getElementById('mapsBody').addEventListener('click', async (e)=>{
-  const btn = e.target.closest('.copy');
+  const btn = e.target.closest('.copy-uid');
   if(!btn) return;
   const uid = btn.dataset.uid;
   if(await copyText(uid)){
@@ -1081,6 +1412,22 @@ document.getElementById('wheelResult').addEventListener('click', (e)=>{
   removeWheelOption(document.querySelector('#wheelResult .wr-name').textContent);
 });
 
+document.querySelectorAll('.lb-mode').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    lbMode = b.dataset.lbmode;
+    document.querySelectorAll('.lb-mode').forEach(x=>{
+      const on = x === b;
+      x.classList.toggle('active', on);
+      x.setAttribute('aria-selected', String(on));
+    });
+    renderLeaderboard();
+  });
+});
+document.getElementById('ldlInput').addEventListener('input', ldlSuggest);
+document.getElementById('ldlForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  ldlGuess(document.getElementById('ldlInput').value);
+});
 document.getElementById('timerStartBtn').addEventListener('click', timerStart);
 document.getElementById('timerStopBtn').addEventListener('click', timerStop);
 document.getElementById('timerResetBtn').addEventListener('click', timerReset);

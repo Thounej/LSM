@@ -86,6 +86,26 @@
   }
   .row:nth-child(-n+3) .val{color:var(--red);}
 
+  /* stacked layout - the value drops under the name so the whole thing
+     works in a narrow column beside the stream instead of across the top */
+  body.stack .head{flex-wrap:wrap;row-gap:calc(4px * var(--scale));}
+  body.stack .sync{margin-left:0;width:100%;}
+  body.stack .row{
+    grid-template-columns:calc(26px * var(--scale)) 1fr;
+    grid-template-areas:"rank name" "rank val";
+    row-gap:calc(1px * var(--scale));
+    padding:calc(8px * var(--scale)) calc(10px * var(--scale));
+  }
+  body.stack .rank{grid-area:rank;align-self:center;}
+  body.stack .name{grid-area:name;font-size:calc(15px * var(--scale));}
+  body.stack .val{
+    grid-area:val;font-size:calc(11.5px * var(--scale));
+    color:var(--muted);letter-spacing:.06em;
+  }
+  body.stack .row:nth-child(-n+3) .val{color:var(--red);}
+  body.stack .stats{flex-direction:column;gap:calc(16px * var(--scale));}
+  body.stack .stat .n{font-size:calc(30px * var(--scale));}
+
   /* stats view */
   .stats{display:flex;gap:calc(26px * var(--scale));flex-wrap:wrap;}
   .stat .n{
@@ -169,6 +189,7 @@ const refresh = Math.max(parseInt(P.get('refresh') || '120', 10) || 120, 30);
 const title   = P.get('title') !== null ? P.get('title') : cfg.title;
 
 document.documentElement.style.setProperty('--scale', scale);
+if (P.get('layout') === 'stack') document.body.classList.add('stack');
 if (P.get('bg') === 'dark')  document.body.classList.add('bg-dark');
 if (P.get('panel') === '1')  document.body.classList.add('panel');
 if (P.get('shadow') !== '0') document.body.classList.add('shadow');
@@ -274,6 +295,10 @@ function setup(){
         <option value="stats">Folder stats</option>
       </select></div>
       <div class="fld"><label for="f-top">Rows</label><input id="f-top" type="number" min="1" max="25" value="5"></div>
+      <div class="fld"><label for="f-layout">Layout</label><select id="f-layout">
+        <option value="row">Wide (across)</option>
+        <option value="stack">Tall (column)</option>
+      </select></div>
       <div class="fld"><label for="f-scale">Size</label><select id="f-scale">
         <option value="0.85">Small</option><option value="1" selected>Normal</option>
         <option value="1.3">Large</option><option value="1.7">Huge</option>
@@ -300,11 +325,12 @@ function setup(){
   `;
   document.body.appendChild(wrap);
 
-  const ids = ['view','top','scale','title','panel','refresh','logo','sync'];
+  const ids = ['view','layout','top','scale','title','panel','refresh','logo','sync'];
   const build = () => {
     const g = k => document.getElementById('f-' + k).value.trim();
     const q = new URLSearchParams();
     q.set('view', g('view'));
+    if(g('layout') === 'stack') q.set('layout', 'stack');
     if(g('view') !== 'stats') q.set('top', g('top'));
     if(g('scale') !== '1') q.set('scale', g('scale'));
     if(g('title')) q.set('title', g('title'));
@@ -314,7 +340,11 @@ function setup(){
     if(g('sync') === '1') q.set('sync', '1');
     const url = base + '?' + q.toString();
     document.getElementById('f-url').value = url;
-    document.getElementById('f-prev').src = url;
+    const prev = document.getElementById('f-prev');
+    const tall = g('layout') === 'stack';
+    prev.style.width  = tall ? '300px' : '100%';
+    prev.style.height = tall ? '520px' : '320px';
+    prev.src = url;
   };
   ids.forEach(k => document.getElementById('f-' + k).addEventListener('input', build));
   document.getElementById('f-copy').addEventListener('click', async () => {

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LSM Stream Widget</title>
+<style>
+  @font-face{font-family:'Geist';font-weight:400;font-display:block;src:url('assets/fonts/Geist-Regular.woff2') format('woff2');}
+  @font-face{font-family:'Geist';font-weight:500;font-display:block;src:url('assets/fonts/Geist-Medium.woff2') format('woff2');}
+  @font-face{font-family:'Geist';font-weight:600;font-display:block;src:url('assets/fonts/Geist-SemiBold.woff2') format('woff2');}
+  @font-face{font-family:'Geist Mono';font-weight:400;font-display:block;src:url('assets/fonts/GeistMono-Regular.woff2') format('woff2');}
+  @font-face{font-family:'Geist Mono';font-weight:600;font-display:block;src:url('assets/fonts/GeistMono-SemiBold.woff2') format('woff2');}
+
+  /* Latitude(deg) palette - four colours, no more */
+  :root{
+    --red:#e03333;
+    --black:#1a1a1a;
+    --white:#ffffff;
+    --cyan:#1fcccc;
+    --muted:rgba(255,255,255,.62);
+    --dim:rgba(255,255,255,.34);
+    --line:rgba(255,255,255,.14);
+    --scale:1;
+  }
+  *{box-sizing:border-box;}
+  /* transparent by default - OBS composites this straight over the scene */
+  html,body{
+    margin:0;padding:0;background:transparent;
+    overflow:hidden;color:var(--white);
+    font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  }
+  body.bg-dark{background:var(--black);}
+
+  #w{
+    padding:calc(16px * var(--scale));
+    display:flex;flex-direction:column;gap:calc(12px * var(--scale));
+  }
+  body.panel #w{
+    background:rgba(26,26,26,.86);border:1px solid var(--line);
+    border-radius:calc(12px * var(--scale));
+  }
+  /* streams get compressed - a hard edge keeps text legible over footage */
+  body.shadow #w{text-shadow:0 2px 5px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.9);}
+
+  .head{display:flex;align-items:center;gap:calc(10px * var(--scale));min-width:0;}
+  .head img{height:calc(20px * var(--scale));width:auto;display:block;flex-shrink:0;}
+  .title{
+    font-family:'Geist Mono',monospace;font-size:calc(11px * var(--scale));
+    letter-spacing:.16em;text-transform:uppercase;color:var(--red);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sync{
+    margin-left:auto;font-family:'Geist Mono',monospace;
+    font-size:calc(9px * var(--scale));letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);white-space:nowrap;flex-shrink:0;
+  }
+
+  .rows{display:flex;flex-direction:column;gap:calc(2px * var(--scale));}
+  .row{
+    position:relative;display:grid;
+    grid-template-columns:calc(30px * var(--scale)) 1fr auto;
+    align-items:center;gap:calc(12px * var(--scale));
+    padding:calc(7px * var(--scale)) calc(10px * var(--scale));
+    border-radius:calc(6px * var(--scale));
+  }
+  /* bar shows share of the leader, same idea as the site's leaderboard */
+  .row::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;z-index:-1;
+    width:var(--pct,0%);background:rgba(224,51,51,.16);
+    border-radius:calc(6px * var(--scale));
+  }
+  .row{isolation:isolate;}
+  .rank{
+    font-family:'Geist Mono',monospace;font-weight:600;
+    font-size:calc(13px * var(--scale));color:var(--dim);font-variant-numeric:tabular-nums;
+  }
+  .row:nth-child(1) .rank{color:var(--red);}
+  .row:nth-child(2) .rank{color:rgba(224,51,51,.8);}
+  .row:nth-child(3) .rank{color:rgba(224,51,51,.62);}
+  .name{
+    font-size:calc(16px * var(--scale));font-weight:500;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .val{
+    font-family:'Geist Mono',monospace;font-weight:600;
+    font-size:calc(14px * var(--scale));color:var(--white);font-variant-numeric:tabular-nums;
+  }
+  .row:nth-child(-n+3) .val{color:var(--red);}
+
+  /* stats view */
+  .stats{display:flex;gap:calc(26px * var(--scale));flex-wrap:wrap;}
+  .stat .n{
+    font-size:calc(34px * var(--scale));font-weight:600;letter-spacing:-0.05em;
+    line-height:1;font-variant-numeric:tabular-nums;
+  }
+  .stat:first-child .n{color:var(--red);}
+  .stat .l{
+    font-family:'Geist Mono',monospace;font-size:calc(9px * var(--scale));
+    letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+    margin-top:calc(6px * var(--scale));
+  }
+
+  .msg{
+    font-family:'Geist Mono',monospace;font-size:calc(10px * var(--scale));
+    letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+    padding:calc(8px * var(--scale)) calc(10px * var(--scale));
+  }
+
+  /* ---------------- setup mode (?setup=1) ---------------- */
+  body.setup{background:var(--black);overflow:auto;padding:28px;}
+  body.setup #w{display:none;}
+  .setup-wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+  .setup-wrap h1{font-size:24px;font-weight:600;letter-spacing:-0.05em;margin:0;}
+  .setup-wrap p{color:var(--muted);font-size:14px;line-height:1.6;margin:0;max-width:600px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
+  .fld{display:flex;flex-direction:column;gap:7px;}
+  .fld label{
+    font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--dim);
+  }
+  .fld select,.fld input{
+    background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--white);
+    padding:10px 12px;border-radius:8px;font-size:14px;font-family:'Geist';
+  }
+  .fld select:focus,.fld input:focus{outline:none;border-color:var(--red);}
+  .out{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;}
+  .out input{
+    flex:1;min-width:260px;background:rgba(255,255,255,.04);border:1px solid var(--line);
+    color:var(--cyan);padding:12px 14px;border-radius:8px;
+    font-family:'Geist Mono',monospace;font-size:12.5px;
+  }
+  .out button{
+    background:var(--red);border:1px solid var(--red);color:var(--white);
+    font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;padding:0 22px;border-radius:8px;cursor:pointer;
+  }
+  .out button:hover{background:transparent;color:var(--red);}
+  .preview{
+    border:1px dashed var(--line);border-radius:12px;padding:0;overflow:hidden;
+    background:
+      linear-gradient(45deg,rgba(255,255,255,.035) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.035) 75%),
+      linear-gradient(45deg,rgba(255,255,255,.035) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.035) 75%);
+    background-size:22px 22px;background-position:0 0,11px 11px;
+  }
+  .preview iframe{display:block;width:100%;height:320px;border:0;}
+  .note{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);}
+</style>
+</head>
+<body>
+
+<div id="w"><div class="msg">Loading&hellip;</div></div>
+
+<script>
+const WORKER = 'https://lsm.kurrankuuselatony98.workers.dev';
+const P = new URLSearchParams(location.search);
+
+const VIEWS = {
+  at:      { title: 'Author medals',  path: '/api/leaderboard',   key: 'atCount', unit: 'AT' },
+  wr:      { title: 'World records',  path: '/api/wrleaderboard', key: 'wrCount', unit: 'WR' },
+  mappers: { title: 'Most maps built', path: '/api/maps',         key: null,      unit: ''   },
+  stats:   { title: 'The folder',      path: '/api/maps',         key: null,      unit: ''   },
+};
+
+const view    = VIEWS[P.get('view')] ? P.get('view') : 'at';
+const cfg     = VIEWS[view];
+const limit   = Math.min(Math.max(parseInt(P.get('top') || '5', 10) || 5, 1), 25);
+const scale   = Math.min(Math.max(parseFloat(P.get('scale') || '1') || 1, 0.5), 3);
+// OBS keeps a source alive for hours; refresh so the numbers don't go stale
+const refresh = Math.max(parseInt(P.get('refresh') || '120', 10) || 120, 30);
+const title   = P.get('title') !== null ? P.get('title') : cfg.title;
+
+document.documentElement.style.setProperty('--scale', scale);
+if (P.get('bg') === 'dark')  document.body.classList.add('bg-dark');
+if (P.get('panel') === '1')  document.body.classList.add('panel');
+if (P.get('shadow') !== '0') document.body.classList.add('shadow');
+if (P.get('accent')) document.documentElement.style.setProperty('--red', '#' + P.get('accent').replace(/^#/, ''));
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// map/player names can carry Trackmania's in-game formatting codes
+function strip(str){
+  if(str == null) return '';
+  let s = String(str);
+  s = s.replace(/\$\$/g, '\u0001').replace(/\$[lhp]\[[^\]]*\]/gi, '').replace(/\$[lhp]/gi, '')
+       .replace(/\$[0-9a-fA-F]{3}/g, '').replace(/\$[a-zA-Z]/g, '').replace(/\u0001/g, '$');
+  return s.trim();
+}
+const bust = u => `${WORKER}${u}${u.includes('?') ? '&' : '?'}_=${Date.now()}`;
+
+function header(sync){
+  const logo = P.get('logo') === '1' ? `<img src="assets/lsm-logo.svg" alt="">` : '';
+  const t = title ? `<span class="title">${esc(title)}</span>` : '';
+  const s = (P.get('sync') === '1' && sync)
+    ? `<span class="sync">Synced ${esc(sync)}</span>` : '';
+  return (logo || t || s) ? `<div class="head">${logo}${t}${s}</div>` : '';
+}
+
+function rowsHtml(items){
+  const max = Math.max(...items.map(i => i.value), 1);
+  return `<div class="rows">` + items.map((it, i) => `
+    <div class="row" style="--pct:${(it.value / max * 100).toFixed(1)}%">
+      <span class="rank">${String(i + 1).padStart(2, '0')}</span>
+      <span class="name">${esc(strip(it.name))}</span>
+      <span class="val">${it.value}${it.unit ? ' ' + it.unit + (it.value === 1 ? '' : 's') : ''}</span>
+    </div>`).join('') + `</div>`;
+}
+
+let lastGood = null;   // keep the last render if a refresh fails mid-stream
+
+async function load(){
+  const el = document.getElementById('w');
+  try{
+    const [data, status] = await Promise.all([
+      fetch(bust(cfg.path)).then(r => { if(!r.ok) throw new Error(r.status); return r.json(); }),
+      P.get('sync') === '1'
+        ? fetch(bust('/api/status')).then(r => r.json()).catch(() => ({}))
+        : Promise.resolve({}),
+    ]);
+
+    const sync = status.lastUpdated
+      ? new Date(status.lastUpdated).toLocaleDateString(undefined, { month:'short', day:'numeric' })
+      : '';
+
+    let body;
+    if(view === 'stats'){
+      const maps = data || [];
+      const medals = maps.reduce((s, m) => s + (m.atCount || 0), 0);
+      const open = maps.filter(m => !m.atCount).length;
+      body = `<div class="stats">
+        <div class="stat"><div class="n">${maps.length}</div><div class="l">Maps<br>tracked</div></div>
+        <div class="stat"><div class="n">${medals}</div><div class="l">Medals<br>claimed</div></div>
+        <div class="stat"><div class="n">${open}</div><div class="l">Still<br>unclaimed</div></div>
+      </div>`;
+    } else if(view === 'mappers'){
+      const counts = new Map();
+      for(const m of (data || [])){
+        const k = m.authorName || m.author;
+        counts.set(k, (counts.get(k) || 0) + 1);
+      }
+      const items = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, limit)
+        .map(([name, value]) => ({ name, value, unit: '' }));
+      body = items.length ? rowsHtml(items) : `<div class="msg">No data</div>`;
+    } else {
+      const items = (data || []).slice(0, limit)
+        .map(p => ({ name: p.name, value: p[cfg.key] || 0, unit: cfg.unit }));
+      body = items.length ? rowsHtml(items) : `<div class="msg">No data yet</div>`;
+    }
+
+    el.innerHTML = header(sync) + body;
+    lastGood = el.innerHTML;
+  }catch(e){
+    // a blip mid-stream should not blank the overlay
+    if(lastGood) el.innerHTML = lastGood;
+    else el.innerHTML = `<div class="msg">LSM offline</div>`;
+  }
+}
+
+// ---------------- setup mode ----------------
+function setup(){
+  document.body.classList.add('setup');
+  const base = location.origin + location.pathname;
+  const wrap = document.createElement('div');
+  wrap.className = 'setup-wrap';
+  wrap.innerHTML = `
+    <div>
+      <h1>LSM stream widget</h1>
+      <p>Pick what you want on screen, copy the URL, and add it in OBS as a <strong>Browser</strong> source. The background is transparent, so it sits straight over your scene.</p>
+    </div>
+    <div class="grid">
+      <div class="fld"><label for="f-view">View</label><select id="f-view">
+        <option value="at">Author medals</option>
+        <option value="wr">World records</option>
+        <option value="mappers">Most maps built</option>
+        <option value="stats">Folder stats</option>
+      </select></div>
+      <div class="fld"><label for="f-top">Rows</label><input id="f-top" type="number" min="1" max="25" value="5"></div>
+      <div class="fld"><label for="f-scale">Size</label><select id="f-scale">
+        <option value="0.85">Small</option><option value="1" selected>Normal</option>
+        <option value="1.3">Large</option><option value="1.7">Huge</option>
+      </select></div>
+      <div class="fld"><label for="f-title">Heading</label><input id="f-title" type="text" placeholder="(default)"></div>
+      <div class="fld"><label for="f-panel">Backing</label><select id="f-panel">
+        <option value="0">Transparent</option><option value="1">Dark panel</option>
+      </select></div>
+      <div class="fld"><label for="f-refresh">Refresh (sec)</label><input id="f-refresh" type="number" min="30" max="3600" value="120"></div>
+      <div class="fld"><label for="f-logo">Logo</label><select id="f-logo">
+        <option value="0">Off</option><option value="1">On</option>
+      </select></div>
+      <div class="fld"><label for="f-sync">Sync date</label><select id="f-sync">
+        <option value="0">Off</option><option value="1">On</option>
+      </select></div>
+    </div>
+    <div class="out">
+      <input id="f-url" readonly>
+      <button id="f-copy" type="button">Copy</button>
+    </div>
+    <div class="note">Preview (checkerboard = transparent)</div>
+    <div class="preview"><iframe id="f-prev" title="preview"></iframe></div>
+    <div class="note">In OBS: Sources &rarr; + &rarr; Browser &rarr; paste the URL &rarr; set width/height to suit</div>
+  `;
+  document.body.appendChild(wrap);
+
+  const ids = ['view','top','scale','title','panel','refresh','logo','sync'];
+  const build = () => {
+    const g = k => document.getElementById('f-' + k).value.trim();
+    const q = new URLSearchParams();
+    q.set('view', g('view'));
+    if(g('view') !== 'stats') q.set('top', g('top'));
+    if(g('scale') !== '1') q.set('scale', g('scale'));
+    if(g('title')) q.set('title', g('title'));
+    if(g('panel') === '1') q.set('panel', '1');
+    if(g('refresh') !== '120') q.set('refresh', g('refresh'));
+    if(g('logo') === '1') q.set('logo', '1');
+    if(g('sync') === '1') q.set('sync', '1');
+    const url = base + '?' + q.toString();
+    document.getElementById('f-url').value = url;
+    document.getElementById('f-prev').src = url;
+  };
+  ids.forEach(k => document.getElementById('f-' + k).addEventListener('input', build));
+  document.getElementById('f-copy').addEventListener('click', async () => {
+    const btn = document.getElementById('f-copy');
+    const input = document.getElementById('f-url');
+    try{ await navigator.clipboard.writeText(input.value); }
+    catch{ input.select(); document.execCommand('copy'); }
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1400);
+  });
+  build();
+}
+
+if(P.get('setup') === '1'){
+  setup();
+} else {
+  load();
+  setInterval(load, refresh * 1000);
+}
+</script>
+</body>
+</html>

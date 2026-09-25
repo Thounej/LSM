@@ -44,6 +44,15 @@ export default {
         return json(data ? JSON.parse(data) : []);
       }
 
+      if (url.pathname === '/api/playerats') {
+        const id = url.searchParams.get('id');
+        if (!id) return json({ error: 'id required' }, 400);
+        const data = await env.LSM.get('playerAts');
+        const all = data ? JSON.parse(data) : null;
+        if (!all) return json({ id, mapUids: [], seeded: false });
+        return json({ id, mapUids: all[id] || [], seeded: true });
+      }
+
       if (url.pathname === '/api/status') {
         const lastUpdated = await env.LSM.get('lastUpdated');
         return json({ lastUpdated });

@@ -258,6 +258,7 @@ async function main() {
   const authorNameCache = new Map();
   const atCountByPlayer = new Map(); // accountId -> { count, name }
   const wrCountByPlayer = new Map(); // accountId -> { count, name }
+  const atMapsByPlayer = new Map();  // accountId -> [mapUid] (which ATs they hold)
   const maps = [];
 
   for (const info of mapInfos) {
@@ -285,6 +286,9 @@ async function main() {
       const entry = atCountByPlayer.get(accountId) || { count: 0, name: null };
       entry.count += 1;
       atCountByPlayer.set(accountId, entry);
+
+      if (!atMapsByPlayer.has(accountId)) atMapsByPlayer.set(accountId, []);
+      atMapsByPlayer.get(accountId).push(mapUid);
     }
 
     if (wr) {
@@ -349,9 +353,10 @@ async function main() {
   await kvPut('maps', JSON.stringify(maps));
   await kvPut('leaderboard', JSON.stringify(leaderboardOut));
   await kvPut('wrLeaderboard', JSON.stringify(wrLeaderboardOut));
+  await kvPut('playerAts', JSON.stringify(Object.fromEntries(atMapsByPlayer)));
   await kvPut('lastUpdated', new Date().toISOString());
 
-  console.log(`Done. ${maps.length} maps, ${leaderboardOut.length} medal entries, ${wrLeaderboardOut.length} WR entries.`);
+  console.log(`Done. ${maps.length} maps, ${leaderboardOut.length} medal entries, ${wrLeaderboardOut.length} WR entries, ${atMapsByPlayer.size} players with ATs.`);
 }
 
 main().catch((err) => {

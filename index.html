@@ -126,6 +126,21 @@
     color:var(--muted-dim);text-align:right;
   }
 
+  .rail-refresh{
+    display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;padding:10px 0;border-radius:100px;
+    cursor:pointer;transition:.15s;margin-top:14px;
+  }
+  .rail-refresh:hover:not(:disabled){color:var(--white);border-color:var(--line-strong);background:var(--surface-2);}
+  .rail-refresh:disabled{opacity:.5;cursor:wait;}
+  .rail-refresh:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
+  .rail-refresh svg{width:12px;height:12px;flex-shrink:0;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .rail-refresh.busy svg{animation:spin .9s linear infinite;}
+  @media(prefers-reduced-motion:reduce){ .rail-refresh.busy svg{animation:none;} }
+
   .rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:14px;}
   .flinks{display:flex;flex-direction:column;gap:8px;}
   .flinks a{
@@ -689,6 +704,11 @@
       <div class="ro"><span class="ro-n" id="statUpdated">&mdash;</span><span class="ro-l">Last<br>synced</span></div>
     </div>
 
+    <button class="rail-refresh" id="refreshBtn" type="button">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.7 7.2A5.7 5.7 0 1 1 12 3.6"></path><path d="M12.6 1.4v2.6H10"></path></svg>
+      <span>Refresh</span>
+    </button>
+
     <div class="rail-foot">
       <div class="flinks">
         <a href="https://trackmania.io/#/clubs/97497/folder/866418" target="_blank" rel="noopener">Folder on trackmania.io &#8599;</a>
@@ -918,12 +938,16 @@ let sortDir = 1;
 let topMappersExpanded = false;
 let wrLeaderboard = [];
 let lbMode = 'at';           // 'at' = author medals, 'wr' = world records
+let lastSyncIso = null;      // so a manual refresh can tell whether anything moved
 
 // "Most maps built" widget shows 5 by default, 15 once expanded.
 const TM_COLLAPSED = 5;
 const TM_EXPANDED = 15;
 
-async function loadData(){
+async function loadData(manual){
+  const btn = document.getElementById('refreshBtn');
+  const prevSync = lastSyncIso;
+  if(manual){ btn.disabled = true; btn.classList.add('busy'); }
   try{
     const [mapsRes, lbRes, wrRes, statusRes] = await Promise.all([
       fetch(`${WORKER_URL}/api/maps`).then(r=>r.json()),
@@ -940,22 +964,31 @@ async function loadData(){
     document.getElementById('statMaps').textContent = allMaps.length;
     document.getElementById('statAts').textContent = allMaps.reduce((s,m)=>s+(m.atCount||0),0);
     document.getElementById('statUnclaimed').textContent = allMaps.filter(m=>!m.atCount).length;
-    if(statusRes.lastUpdated){
-      document.getElementById('statUpdated').textContent =
-        new Date(statusRes.lastUpdated).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    } else {
-      document.getElementById('statUpdated').textContent = '—';
-    }
+    lastSyncIso = statusRes.lastUpdated || null;
+    const upd = document.getElementById('statUpdated');
+    upd.textContent = agoText(lastSyncIso);
+    upd.title = lastSyncIso ? new Date(lastSyncIso).toLocaleString() : '';
 
     renderMaps();
     renderLeaderboard();
     renderTopMappers();
     if(myPlayer) myLoadHeld();
+
+    if(manual){
+      // pressing refresh and seeing identical numbers looks broken, so say
+      // plainly whether the nightly sync has actually produced anything new
+      showToast(prevSync && lastSyncIso && prevSync !== lastSyncIso
+        ? 'New data loaded'
+        : `Already up to date · synced ${agoText(lastSyncIso)}`, null);
+    }
   }catch(e){
+    if(manual){ showToast("Couldn't reach the tracker", null, false); }
     const msg = `Couldn't load data. Is the Worker URL set correctly? (${e.message})`;
     document.getElementById('mapsBody').innerHTML = `<tr><td colspan="4" class="empty">${msg}</td></tr>`;
     document.getElementById('leaderboardBody').innerHTML = `<div class="empty">${msg}</div>`;
     document.getElementById('topMappers').innerHTML = `<div class="empty">—</div>`;
+  }finally{
+    if(manual){ btn.disabled = false; btn.classList.remove('busy'); }
   }
 }
 
@@ -1625,6 +1658,16 @@ function showToast(msg, uid, ok = true){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
+// "6h ago" reads better than a bare date when you are judging staleness
+function agoText(iso){
+  if(!iso) return '—';
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if(s < 90) return 'just now';
+  const m = s / 60;   if(m < 90) return Math.round(m) + 'm ago';
+  const hr = m / 60;  if(hr < 36) return Math.round(hr) + 'h ago';
+  return Math.round(hr / 24) + 'd ago';
+}
+
 function formatTime(ms){
   if(ms==null) return '—';
   const m = Math.floor(ms/60000);
@@ -1723,6 +1766,7 @@ document.querySelectorAll('.lb-mode').forEach(b=>{
     renderLeaderboard();
   });
 });
+document.getElementById('refreshBtn').addEventListener('click', ()=>loadData(true));
 document.getElementById('myForm').addEventListener('submit', (e)=>{
   e.preventDefault();
   mySearch(document.getElementById('myInput').value);
